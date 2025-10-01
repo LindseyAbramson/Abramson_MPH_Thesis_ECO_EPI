@@ -1,0 +1,213 @@
+---
+title: "Abramson_MPHThesis_ECOEPI"
+output: github_document
+date: "2025-10-01"
+---
+
+```{r setup, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(readxl)
+library(haven)
+library(knitr)
+```
+
+
+## Import and Tidy Data
+
+Import dataset
+```{r}
+ticknyc_df=
+read_csv("data/Tick_nyc_clean_23_24.csv") |>
+  janitor::clean_names() |>
+    mutate(date = mdy(date))
+```
+
+Standardize by transect
+```{r}
+
+```
+
+## Descriptive Summaries
+Overview
+```{r}
+overview <- ticknyc_df %>%
+  summarise(
+    Total_Transects = n(),
+    Total_Ticks = sum(total, na.rm = TRUE),
+    Mean_Ticks_Per_Transect = round(mean(total, na.rm = TRUE), 2),
+    Max_Ticks_Single_Transect = max(total, na.rm = TRUE)
+  )
+
+cat("\n\n### Overall Summary\n")
+kable(overview, format = "simple", caption = "Overall sampling statistics")
+```
+
+County summary
+```{r}
+county_totals <- ticknyc_df %>%
+  group_by(county) %>%
+  summarise(
+    Transects = n(),
+    Total_Ticks = sum(total, na.rm = TRUE),
+    Mean_Ticks_Per_Transect = round(mean(total, na.rm = TRUE), 2)
+  ) %>%
+  arrange(desc(Total_Ticks))
+
+cat("\n\n### County Totals\n")
+kable(county_totals, format = "simple", caption = "Tick counts by county")
+```
+
+
+Transect type summary
+```{r}
+transect_totals <- ticknyc_df %>%
+  group_by(transect_type) %>%
+  summarise(
+    Transects = n(),
+    Total_Ticks = sum(total, na.rm = TRUE),
+    Mean_Ticks_Per_Transect = round(mean(total, na.rm = TRUE), 2)
+  ) %>%
+  arrange(desc(Total_Ticks))
+
+cat("\n\n### Transect Type Totals\n")
+kable(transect_totals, format = "simple", caption = "Tick counts by transect type")
+```
+
+Species by transect type
+```{r}
+species_transect <- ticknyc_df %>%
+  group_by(transect_type) %>%
+  summarise(
+    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
+    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
+    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
+    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
+    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
+  ) %>%
+  pivot_longer(-transect_type, names_to = "species", values_to = "count") %>%
+  pivot_wider(names_from = transect_type, values_from = count, values_fill = 0)
+
+cat("\n\n### Species by Transect Type\n")
+kable(species_transect, format = "simple", caption = "Total tick counts by species and transect type")
+```
+
+
+Species + life stage count
+```{r}
+ticknyc_df |>
+  summarise(across(amblyomma_americanum_adult:unknown_unknown, ~sum(., na.rm = TRUE))) |>
+  pivot_longer(everything(), names_to = "Species_LifeStage", values_to = "Count") |>
+  arrange(desc(Count)) |>
+  print()
+```
+
+Species count in each county
+```{r}
+species_county <- ticknyc_df %>%
+  group_by(county) %>%
+  summarise(
+    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
+    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
+    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
+    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
+    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
+  ) %>%
+  pivot_longer(-county, names_to = "species", values_to = "count") %>%
+  pivot_wider(names_from = county, values_from = count, values_fill = 0)
+
+cat("### Species by County\n")
+kable(species_county, format = "simple", caption = "Total tick counts by species and county")
+```
+
+Life stages count
+```{r}
+# LIFE STAGES SUMMARY
+ticknyc_df |>
+  summarise(
+    Adults = sum(across(ends_with("_adult")), na.rm = TRUE),
+    Nymphs = sum(across(ends_with("_nymph")), na.rm = TRUE),
+    Larvae = sum(across(ends_with("_larva")), na.rm = TRUE),
+    Total = Adults + Nymphs + Larvae
+  ) |>
+  print()
+```
+
+Life staage count by county
+```{r}
+ticknyc_df |>
+  group_by(county) |>
+  summarise(
+    Adults = sum(across(ends_with("_adult")), na.rm = TRUE),
+    Nymphs = sum(across(ends_with("_nymph")), na.rm = TRUE),
+    Larvae = sum(across(ends_with("_larva")), na.rm = TRUE),
+    Total = Adults + Nymphs + Larvae
+  ) |>
+  print()
+```
+
+Life stage count by transect type
+```{r}
+ticknyc_df |>
+  group_by(transect_type) |>
+  summarise(
+    Adults = sum(across(ends_with("_adult")), na.rm = TRUE),
+    Nymphs = sum(across(ends_with("_nymph")), na.rm = TRUE),
+    Larvae = sum(across(ends_with("_larva")), na.rm = TRUE),
+    Total = Adults + Nymphs + Larvae
+  ) |>
+  print()
+```
+
+
+Species (lfiestages combined) in each transect
+```{r}
+species_transect_wide <- ticknyc_df %>%
+  group_by(transect_type) %>%
+  summarise(
+    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
+    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
+    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
+    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
+    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
+  ) %>%
+  pivot_longer(-transect_type, names_to = "species", values_to = "count") %>%
+  pivot_wider(names_from = transect_type, values_from = count, values_fill = 0)
+
+print(species_transect_wide)
+```
+
+```{r}
+library(tidyverse)
+
+# Simple table: species as rows, counties as columns
+species_county <- ticknyc_df %>%
+  group_by(county) %>%
+  summarise(
+    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
+    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
+    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
+    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
+    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
+  ) %>%
+  pivot_longer(-county, names_to = "species", values_to = "count") %>%
+  pivot_wider(names_from = county, values_from = count, values_fill = 0)
+
+print(species_county)
+```
+
+```{r}
+species_county_transect <- ticknyc_df %>%
+  group_by(county, transect_type) %>%
+  summarise(
+    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
+    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
+    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
+    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
+    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
+  ) %>%
+  pivot_longer(-c(county, transect_type), names_to = "species", values_to = "count") %>%
+  pivot_wider(names_from = c(county, transect_type), values_from = count, values_fill = 0)
+
+print(species_county_transect)
+```
+
