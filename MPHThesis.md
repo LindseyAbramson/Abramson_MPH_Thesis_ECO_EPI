@@ -1,4 +1,4 @@
-Abramson_MPHThesis_ECOEPI
+MPH Thesis: Lindsey Abramson
 ================
 2025-10-01
 
@@ -29,131 +29,86 @@ Standardize by transect
 Overview
 
 ``` r
-overview <- ticknyc_df %>%
+ticknyc_df |>
   summarise(
-    Total_Transects = n(),
+      Total_Transects = n(),
     Total_Ticks = sum(total, na.rm = TRUE),
     Mean_Ticks_Per_Transect = round(mean(total, na.rm = TRUE), 2),
     Max_Ticks_Single_Transect = max(total, na.rm = TRUE)
-  )
-
-cat("\n\n### Overall Summary\n")
-```
-
-    ## 
-    ## 
-    ## ### Overall Summary
-
-``` r
-kable(overview, format = "simple", caption = "Overall sampling statistics")
+  ) |>
+   knitr::kable()
 ```
 
 | Total_Transects | Total_Ticks | Mean_Ticks_Per_Transect | Max_Ticks_Single_Transect |
 |---:|---:|---:|---:|
 | 2070 | 24643 | 12 | 386 |
 
-Overall sampling statistics
-
 County summary
 
 ``` r
-county_totals <- ticknyc_df %>%
-  group_by(county) %>%
+ticknyc_df |>
+  group_by(county) |>
   summarise(
     Transects = n(),
     Total_Ticks = sum(total, na.rm = TRUE),
-    Mean_Ticks_Per_Transect = round(mean(total, na.rm = TRUE), 2)
-  ) %>%
-  arrange(desc(Total_Ticks))
-
-cat("\n\n### County Totals\n")
+    Mean_ticks_per_transect = mean(total, na.rm = TRUE),
+    Median_ticks_per_transect = median(total, na.rm = TRUE),
+    Transects_with_ticks = sum(total > 0, na.rm = TRUE),
+    Percent_transects_with_ticks = round(mean(total > 0, na.rm = TRUE) * 100, 1),
+  ) |>
+  arrange(desc(Total_Ticks)) |>
+   knitr::kable()
 ```
 
-    ## 
-    ## 
-    ## ### County Totals
-
-``` r
-kable(county_totals, format = "simple", caption = "Tick counts by county")
-```
-
-| county        | Transects | Total_Ticks | Mean_Ticks_Per_Transect |
-|:--------------|----------:|------------:|------------------------:|
-| Suffolk       |       694 |       17626 |                   25.40 |
-| Nassau        |       638 |        3899 |                    6.14 |
-| Staten Island |       364 |        2981 |                    8.35 |
-| Queens        |       298 |          96 |                    0.33 |
-| Brooklyn      |        76 |          41 |                    0.54 |
-
-Tick counts by county
+| county | Transects | Total_Ticks | Mean_ticks_per_transect | Median_ticks_per_transect | Transects_with_ticks | Percent_transects_with_ticks |
+|:---|---:|---:|---:|---:|---:|---:|
+| Suffolk | 694 | 17626 | 25.3976945 | 12 | 591 | 85.2 |
+| Nassau | 638 | 3899 | 6.1401575 | 1 | 367 | 57.8 |
+| Staten Island | 364 | 2981 | 8.3501401 | 3 | 271 | 75.9 |
+| Queens | 298 | 96 | 0.3298969 | 0 | 54 | 18.6 |
+| Brooklyn | 76 | 41 | 0.5394737 | 0 | 16 | 21.1 |
 
 Transect type summary
 
 ``` r
-transect_totals <- ticknyc_df %>%
-  group_by(transect_type) %>%
+ticknyc_df |>
+  group_by(transect_type) |>
   summarise(
-    Transects = n(),
+   Transects = n(),
     Total_Ticks = sum(total, na.rm = TRUE),
-    Mean_Ticks_Per_Transect = round(mean(total, na.rm = TRUE), 2)
-  ) %>%
-  arrange(desc(Total_Ticks))
-
-cat("\n\n### Transect Type Totals\n")
+    Mean_ticks_per_transect = mean(total, na.rm = TRUE),
+    Median_ticks_per_transect = median(total, na.rm = TRUE),
+    Transects_with_ticks = sum(total > 0, na.rm = TRUE),
+    Percent_transects_with_ticks = round(mean(total > 0, na.rm = TRUE) * 100, 1)) |> 
+  arrange(desc(Total_Ticks)) |>
+   knitr::kable()
 ```
 
-    ## 
-    ## 
-    ## ### Transect Type Totals
+| transect_type | Transects | Total_Ticks | Mean_ticks_per_transect | Median_ticks_per_transect | Transects_with_ticks | Percent_transects_with_ticks |
+|:---|---:|---:|---:|---:|---:|---:|
+| Trail | 828 | 10950 | 13.304982 | 2 | 538 | 65.4 |
+| Interior | 803 | 10493 | 13.215365 | 3 | 517 | 65.1 |
+| Edge | 421 | 3087 | 7.385167 | 1 | 234 | 56.0 |
+| NA | 18 | 113 | 6.277778 | 1 | 10 | 55.6 |
+
+Species counts
 
 ``` r
-kable(transect_totals, format = "simple", caption = "Tick counts by transect type")
-```
-
-| transect_type | Transects | Total_Ticks | Mean_Ticks_Per_Transect |
-|:--------------|----------:|------------:|------------------------:|
-| Trail         |       828 |       10950 |                   13.30 |
-| Interior      |       803 |       10493 |                   13.22 |
-| Edge          |       421 |        3087 |                    7.39 |
-| NA            |        18 |         113 |                    6.28 |
-
-Tick counts by transect type
-
-Species by transect type
-
-``` r
-species_transect <- ticknyc_df %>%
-  group_by(transect_type) %>%
+ticknyc_df |>
   summarise(
-    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
-    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
-    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
-    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
-    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
-  ) %>%
-  pivot_longer(-transect_type, names_to = "species", values_to = "count") %>%
-  pivot_wider(names_from = transect_type, values_from = count, values_fill = 0)
-
-cat("\n\n### Species by Transect Type\n")
+    ixodes_total = sum(across(starts_with("ixodes")), na.rm = TRUE),
+    amblyomma_total = sum(across(starts_with("amblyomma")), na.rm = TRUE),
+    dermacentor_total = sum(across(starts_with("dermacentor")), na.rm = TRUE),
+    haemaphysalis_total = sum(across(starts_with("haemaphysalis")), na.rm = TRUE),
+    rhipicephalus_total = sum(across(starts_with("rhipicephalus")), na.rm = TRUE),
+    unknown_total = sum(across(starts_with("unknown")), na.rm = TRUE)
+) |>
+   knitr::kable()
 ```
 
-    ## 
-    ## 
-    ## ### Species by Transect Type
-
-``` r
-kable(species_transect, format = "simple", caption = "Total tick counts by species and transect type")
-```
-
-| species                   | Edge | Interior | Trail |  NA |
-|:--------------------------|-----:|---------:|------:|----:|
-| ixodes_scapularis         |  874 |     4661 |  4355 |  33 |
-| haemaphysalis_longicornis |  423 |      931 |   606 |  62 |
-| dermacentor_variabilis    |   99 |       40 |   124 |   6 |
-| amblyomma_americanum      | 1676 |     4865 |  5870 |  12 |
-| unknown                   |    2 |        3 |     3 |   0 |
-
-Total tick counts by species and transect type
+| ixodes_total | amblyomma_total | dermacentor_total | haemaphysalis_total | rhipicephalus_total | unknown_total |
+|---:|---:|---:|---:|---:|---:|
+| 9923 | 12435 | 270 | 2043 | 2 | 8 |
 
 Species + life stage count
 
@@ -162,7 +117,8 @@ ticknyc_df |>
   summarise(across(amblyomma_americanum_adult:unknown_unknown, ~sum(., na.rm = TRUE))) |>
   pivot_longer(everything(), names_to = "Species_LifeStage", values_to = "Count") |>
   arrange(desc(Count)) |>
-  print()
+  print() |>
+   knitr::kable()
 ```
 
     ## # A tibble: 28 × 2
@@ -180,44 +136,94 @@ ticknyc_df |>
     ## 10 ixodes_scapularis_adult           102
     ## # ℹ 18 more rows
 
+| Species_LifeStage                    | Count |
+|:-------------------------------------|------:|
+| amblyomma_americanum_nymph           | 10026 |
+| ixodes_scapularis_nymph              |  9301 |
+| amblyomma_americanum_adult           |  1949 |
+| haemaphysalis_longicornis_nymph      |  1472 |
+| ixodes_scapularis_larva              |   520 |
+| amblyomma_americanum_larva           |   448 |
+| haemaphysalis_longicornis_larva      |   414 |
+| dermacentor_variabilis_adult         |   261 |
+| haemaphysalis_longicornis_adult      |   136 |
+| ixodes_scapularis_adult              |   102 |
+| haemaphysalis_leporispalustris_nymph |    19 |
+| amblyomma_maculatum_nymph            |     7 |
+| dermacentor_variabilis_nymph         |     6 |
+| amblyomma_maculatum_adult            |     4 |
+| unknown_nymph                        |     3 |
+| dermacentor_variabilis_larva         |     2 |
+| haemaphysalis_leporispalustris_adult |     2 |
+| rhipicephalus_sanguineus_nymph       |     2 |
+| unknown_adult                        |     2 |
+| unknown_unknown                      |     2 |
+| amblyomma_maculatum_larva            |     1 |
+| dermacentor_albipictus_adult         |     1 |
+| unknown_larva                        |     1 |
+| dermacentor_albipictus_nymph         |     0 |
+| dermacentor_albipictus_larva         |     0 |
+| haemaphysalis_leporispalustris_larva |     0 |
+| rhipicephalus_sanguineus_adult       |     0 |
+| rhipicephalus_sanguineus_larva       |     0 |
+
+Species by transect type
+
+``` r
+ticknyc_df |>
+  group_by(transect_type) |>
+  summarise(
+      ixodes_total = sum(across(starts_with("ixodes")), na.rm = TRUE),
+    amblyomma_total = sum(across(starts_with("amblyomma")), na.rm = TRUE),
+    dermacentor_total = sum(across(starts_with("dermacentor")), na.rm = TRUE),
+    haemaphysalis_total = sum(across(starts_with("haemaphysalis")), na.rm = TRUE),
+    rhipicephalus_total = sum(across(starts_with("rhipicephalus")), na.rm = TRUE),
+    unknown_total = sum(across(starts_with("unknown")), na.rm = TRUE)
+  ) |>
+  pivot_longer(-transect_type, names_to = "species", values_to = "count") %>%
+  pivot_wider(names_from = transect_type, values_from = count, values_fill = 0) |>
+   knitr::kable()
+```
+
+| species             | Edge | Interior | Trail |  NA |
+|:--------------------|-----:|---------:|------:|----:|
+| ixodes_total        |  874 |     4661 |  4355 |  33 |
+| amblyomma_total     | 1678 |     4865 |  5880 |  12 |
+| dermacentor_total   |   99 |       41 |   124 |   6 |
+| haemaphysalis_total |  432 |      935 |   614 |  62 |
+| rhipicephalus_total |    2 |        0 |     0 |   0 |
+| unknown_total       |    2 |        3 |     3 |   0 |
+
 Species count in each county
 
 ``` r
-species_county <- ticknyc_df %>%
-  group_by(county) %>%
+ticknyc_df |>
+  group_by(county) |>
   summarise(
-    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
-    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
-    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
-    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
-    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
-  ) %>%
-  pivot_longer(-county, names_to = "species", values_to = "count") %>%
-  pivot_wider(names_from = county, values_from = count, values_fill = 0)
-
-cat("### Species by County\n")
+    ixodes_total = sum(across(starts_with("ixodes")), na.rm = TRUE),
+    amblyomma_total = sum(across(starts_with("amblyomma")), na.rm = TRUE),
+    dermacentor_total = sum(across(starts_with("dermacentor")), na.rm = TRUE),
+    haemaphysalis_total = sum(across(starts_with("haemaphysalis")), na.rm = TRUE),
+    rhipicephalus_total = sum(across(starts_with("rhipicephalus")), na.rm = TRUE),
+    unknown_total = sum(across(starts_with("unknown")), na.rm = TRUE)
+  ) |>
+  pivot_longer(-county, names_to = "species", values_to = "count") |>
+  pivot_wider(names_from = county, values_from = count, values_fill = 0) |>
+    knitr::kable()
 ```
 
-    ## ### Species by County
-
-``` r
-kable(species_county, format = "simple", caption = "Total tick counts by species and county")
-```
-
-| species                   | Brooklyn | Nassau | Queens | Staten Island | Suffolk |
-|:--------------------------|---------:|-------:|-------:|--------------:|--------:|
-| ixodes_scapularis         |       10 |   3721 |     42 |           615 |    5535 |
-| haemaphysalis_longicornis |        1 |     44 |     21 |          1601 |     355 |
-| dermacentor_variabilis    |       24 |    114 |     25 |             1 |     105 |
-| amblyomma_americanum      |        5 |     23 |      7 |           781 |   11607 |
-| unknown                   |        0 |      2 |      1 |             1 |       4 |
-
-Total tick counts by species and county
+| species             | Brooklyn | Nassau | Queens | Staten Island | Suffolk |
+|:--------------------|---------:|-------:|-------:|--------------:|--------:|
+| ixodes_total        |       10 |   3721 |     42 |           615 |    5535 |
+| amblyomma_total     |        6 |     23 |      7 |           786 |   11613 |
+| dermacentor_total   |       24 |    114 |     26 |             1 |     105 |
+| haemaphysalis_total |        1 |     47 |     21 |          1607 |     367 |
+| rhipicephalus_total |        0 |      0 |      0 |             0 |       2 |
+| unknown_total       |        0 |      2 |      1 |             1 |       4 |
 
 Life stages count
 
 ``` r
-# LIFE STAGES SUMMARY
 ticknyc_df |>
   summarise(
     Adults = sum(across(ends_with("_adult")), na.rm = TRUE),
@@ -225,13 +231,12 @@ ticknyc_df |>
     Larvae = sum(across(ends_with("_larva")), na.rm = TRUE),
     Total = Adults + Nymphs + Larvae
   ) |>
-  print()
+    knitr::kable()
 ```
 
-    ## # A tibble: 1 × 4
-    ##   Adults Nymphs Larvae Total
-    ##    <dbl>  <dbl>  <dbl> <dbl>
-    ## 1   2457  20836   1386 24679
+| Adults | Nymphs | Larvae | Total |
+|-------:|-------:|-------:|------:|
+|   2457 |  20836 |   1386 | 24679 |
 
 Life staage count by county
 
@@ -244,17 +249,16 @@ ticknyc_df |>
     Larvae = sum(across(ends_with("_larva")), na.rm = TRUE),
     Total = Adults + Nymphs + Larvae
   ) |>
-  print()
+  knitr::kable()
 ```
 
-    ## # A tibble: 5 × 5
-    ##   county        Adults Nymphs Larvae Total
-    ##   <chr>          <dbl>  <dbl>  <dbl> <dbl>
-    ## 1 Brooklyn          29     12      0    41
-    ## 2 Nassau           183   3292    432  3907
-    ## 3 Queens            34     63      0    97
-    ## 4 Staten Island    281   2334    394  3009
-    ## 5 Suffolk         1930  15135    560 17625
+| county        | Adults | Nymphs | Larvae | Total |
+|:--------------|-------:|-------:|-------:|------:|
+| Brooklyn      |     29 |     12 |      0 |    41 |
+| Nassau        |    183 |   3292 |    432 |  3907 |
+| Queens        |     34 |     63 |      0 |    97 |
+| Staten Island |    281 |   2334 |    394 |  3009 |
+| Suffolk       |   1930 |  15135 |    560 | 17625 |
 
 Life stage count by transect type
 
@@ -267,104 +271,12 @@ ticknyc_df |>
     Larvae = sum(across(ends_with("_larva")), na.rm = TRUE),
     Total = Adults + Nymphs + Larvae
   ) |>
-  print()
+  knitr::kable()
 ```
 
-    ## # A tibble: 4 × 5
-    ##   transect_type Adults Nymphs Larvae Total
-    ##   <chr>          <dbl>  <dbl>  <dbl> <dbl>
-    ## 1 Edge             460   2627      0  3087
-    ## 2 Interior         712   8665   1127 10504
-    ## 3 Trail           1276   9482    217 10975
-    ## 4 <NA>               9     62     42   113
-
-Species (lfiestages combined) in each transect
-
-``` r
-species_transect_wide <- ticknyc_df %>%
-  group_by(transect_type) %>%
-  summarise(
-    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
-    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
-    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
-    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
-    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
-  ) %>%
-  pivot_longer(-transect_type, names_to = "species", values_to = "count") %>%
-  pivot_wider(names_from = transect_type, values_from = count, values_fill = 0)
-
-print(species_transect_wide)
-```
-
-    ## # A tibble: 5 × 5
-    ##   species                    Edge Interior Trail  `NA`
-    ##   <chr>                     <dbl>    <dbl> <dbl> <dbl>
-    ## 1 ixodes_scapularis           874     4661  4355    33
-    ## 2 haemaphysalis_longicornis   423      931   606    62
-    ## 3 dermacentor_variabilis       99       40   124     6
-    ## 4 amblyomma_americanum       1676     4865  5870    12
-    ## 5 unknown                       2        3     3     0
-
-``` r
-library(tidyverse)
-
-# Simple table: species as rows, counties as columns
-species_county <- ticknyc_df %>%
-  group_by(county) %>%
-  summarise(
-    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
-    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
-    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
-    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
-    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
-  ) %>%
-  pivot_longer(-county, names_to = "species", values_to = "count") %>%
-  pivot_wider(names_from = county, values_from = count, values_fill = 0)
-
-print(species_county)
-```
-
-    ## # A tibble: 5 × 6
-    ##   species                   Brooklyn Nassau Queens `Staten Island` Suffolk
-    ##   <chr>                        <dbl>  <dbl>  <dbl>           <dbl>   <dbl>
-    ## 1 ixodes_scapularis               10   3721     42             615    5535
-    ## 2 haemaphysalis_longicornis        1     44     21            1601     355
-    ## 3 dermacentor_variabilis          24    114     25               1     105
-    ## 4 amblyomma_americanum             5     23      7             781   11607
-    ## 5 unknown                          0      2      1               1       4
-
-``` r
-species_county_transect <- ticknyc_df %>%
-  group_by(county, transect_type) %>%
-  summarise(
-    ixodes_scapularis = sum(ixodes_scapularis_adult + ixodes_scapularis_nymph + ixodes_scapularis_larva, na.rm = TRUE),
-    haemaphysalis_longicornis = sum(haemaphysalis_longicornis_adult + haemaphysalis_longicornis_nymph + haemaphysalis_longicornis_larva, na.rm = TRUE),
-    dermacentor_variabilis = sum(dermacentor_variabilis_adult + dermacentor_variabilis_nymph + dermacentor_variabilis_larva, na.rm = TRUE),
-    amblyomma_americanum = sum(amblyomma_americanum_adult + amblyomma_americanum_nymph + amblyomma_americanum_larva, na.rm = TRUE),
-    unknown = sum(unknown_adult + unknown_nymph + unknown_larva + unknown_unknown, na.rm = TRUE)
-  ) %>%
-  pivot_longer(-c(county, transect_type), names_to = "species", values_to = "count") %>%
-  pivot_wider(names_from = c(county, transect_type), values_from = count, values_fill = 0)
-```
-
-    ## `summarise()` has grouped output by 'county'. You can override using the
-    ## `.groups` argument.
-
-``` r
-print(species_county_transect)
-```
-
-    ## # A tibble: 5 × 20
-    ##   species Brooklyn_Edge Brooklyn_Interior Brooklyn_Trail Brooklyn_NA Nassau_Edge
-    ##   <chr>           <dbl>             <dbl>          <dbl>       <dbl>       <dbl>
-    ## 1 ixodes…             0                 0             10           0         239
-    ## 2 haemap…             0                 1              0           0          12
-    ## 3 dermac…             2                 0             19           3          27
-    ## 4 amblyo…             0                 1              4           0           1
-    ## 5 unknown             0                 0              0           0           1
-    ## # ℹ 14 more variables: Nassau_Interior <dbl>, Nassau_Trail <dbl>,
-    ## #   Nassau_NA <dbl>, Queens_Edge <dbl>, Queens_Interior <dbl>,
-    ## #   Queens_Trail <dbl>, Queens_NA <dbl>, `Staten Island_Edge` <dbl>,
-    ## #   `Staten Island_Interior` <dbl>, `Staten Island_Trail` <dbl>,
-    ## #   `Staten Island_NA` <dbl>, Suffolk_Edge <dbl>, Suffolk_Interior <dbl>,
-    ## #   Suffolk_Trail <dbl>
+| transect_type | Adults | Nymphs | Larvae | Total |
+|:--------------|-------:|-------:|-------:|------:|
+| Edge          |    460 |   2627 |      0 |  3087 |
+| Interior      |    712 |   8665 |   1127 | 10504 |
+| Trail         |   1276 |   9482 |    217 | 10975 |
+| NA            |      9 |     62 |     42 |   113 |
