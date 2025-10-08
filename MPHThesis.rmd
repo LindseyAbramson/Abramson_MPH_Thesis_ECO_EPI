@@ -45,6 +45,16 @@ Standardize by transect
 
 ```
 
+Correct for date (phenology)
+```{r}
+
+```
+
+Correct for weather?
+```{r}
+
+```
+
 
 
 ## Descriptive Summaries

@@ -24,6 +24,10 @@ read_csv("data/Tick_nyc_clean_23_24.csv") |>
 
 Standardize by transect
 
+Correct for date (phenology)
+
+Correct for weather?
+
 ## Descriptive Summaries
 
 Overview
