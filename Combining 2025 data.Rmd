@@ -30,8 +30,83 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
-  
+
+# 2023 + 2024
+## Import and Tidy Data 2023-2024
+
+Import dataset
 ```{r}
+ticknyc_df=
+read_csv("data/Tick_nyc_clean_23_24.csv") |>
+  janitor::clean_names() |>
+    mutate(date = mdy(date)) |>
+  select(-site_function, -longitude_start, -latitude_start) |>
+rename(
+  notes = overall_notes
+)
+```
+
+Standardize by transect for 100m. Create a new column, by 100m.
+By park and transect type.
+```{r}
+# Standardizing ticknyc data using GPS start and end
+
+ticknyc_df$fraction_of_100m <- apply(ticknyc_df, 1, function(row) {
+  tryCatch({
+    ## ---- Parse GPS START ----
+    gps_start <- row["gps_start"]
+    start_clean <- gsub("\\s", "", gps_start)
+    start_split <- strsplit(start_clean, ",")[[1]]
+    
+    start_lat <- as.numeric(start_split[1])
+    start_lon <- as.numeric(start_split[2])
+    
+    ## ---- Parse GPS END ----
+    gps_end <- row["gps_end"]
+    end_clean <- gsub("\\s", "", gps_end)
+    end_split <- strsplit(end_clean, ",")[[1]]
+    
+    end_lat <- as.numeric(end_split[1])
+    end_lon <- as.numeric(end_split[2])
+    
+    ## ---- Distance in meters ----
+    distance_m <- distGeo(
+      c(start_lon, start_lat),
+      c(end_lon, end_lat)
+    )
+    
+    ## ---- Fraction of 100 m ----
+    round(distance_m / 100, 4)
+    
+  }, error = function(e) {
+    NA
+  })
+})
+
+# Create standardized 100 m transect ID
+ticknyc_df$transect_100m_standard <- paste0(
+  ticknyc_df$transect_no, "_", round(ticknyc_df$fraction_of_100m, 2)
+)
+
+# Check results
+head(
+  ticknyc_df[, c(
+    "transect_no",
+    "gps_start",
+    "gps_end",
+    "fraction_of_100m",
+    "transect_100m_standard"
+  )]
+)
+
+# How many succeeded
+sum(!is.na(ticknyc_df$fraction_of_100m))
+
+```
+
+# 2025
+## Combining two 2025 datasets
+```{r, error=TRUE}
 #read in data
 field_data <- read_csv("data/FIELD DATA.csv") |>
   janitor::clean_names() 
@@ -83,6 +158,20 @@ new_data <- field_summary %>%
     site_function = NA,
     fraction_of_100m = NA,
     transect_100m_standard = NA,
+    amblyomma_maculatum_larva = 0,
+    dermacentor_albipictus_nymph = 0,
+    dermacentor_albipictus_larva = 0,
+    dermacentor_variabilis_nymph=0,
+    dermacentor_variabilis_larva=0,
+    haemaphysalis_leporispalustris_adult=0,
+    haemaphysalis_leporispalustris_nymph=0,
+    haemaphysalis_leporispalustris_larva=0,
+    rhipicephalus_sanguineus_adult=0, 
+    rhipicephalus_sanguineus_nymph=0, 
+    rhipicephalus_sanguineus_larva=0,
+    unknown_adult=0, 
+    unknown_nymph=0,
+    unknown_unknown=0
   ) |>
 janitor::clean_names()
 
@@ -93,11 +182,122 @@ habitat_type_concat = habitat_list,
 temp_f = temperature,
 rh_percent = humidity,
 collectors = collector
-  )|>
-  select(
-    transect_no, county, site, site_function,  # First variables
-    transect_type, drag_round, year, date,     # Then these
-    habitat_type_concat, temp_f, rh_percent, gps_start, gps_end, start_time, end_time, collectors, everything() 
   )
+
+new_data$total <- rowSums(new_data[, 16:41], na.rm = TRUE)
+
+new_data <-new_data |>
+  select(
+    transect_no, county, site,  # First variables
+    transect_type, drag_round, year, date,     # Then these
+    habitat_type_concat, temp_f, rh_percent, gps_start, gps_end, start_time, end_time, collectors, amblyomma_americanum_adult, amblyomma_americanum_nymph, amblyomma_americanum_larva, amblyomma_maculatum_adult, amblyomma_maculatum_nymph, amblyomma_maculatum_larva, dermacentor_albipictus_adult, dermacentor_albipictus_nymph, dermacentor_albipictus_larva, dermacentor_variabilis_adult,  dermacentor_variabilis_nymph, dermacentor_variabilis_larva, haemaphysalis_leporispalustris_adult, haemaphysalis_leporispalustris_nymph, haemaphysalis_leporispalustris_larva, haemaphysalis_longicornis_adult, haemaphysalis_longicornis_nymph, haemaphysalis_longicornis_larva, ixodes_scapularis_adult, ixodes_scapularis_nymph, ixodes_scapularis_larva, rhipicephalus_sanguineus_adult, rhipicephalus_sanguineus_nymph, rhipicephalus_sanguineus_larva, unknown_adult, unknown_nymph, unknown_larva, unknown_unknown, total, fraction_of_100m, notes
+  )
+```
+
+# Adding in county
+```{r}
+library(dplyr)
+library(stringr)
+
+new_data <- new_data %>%
+  mutate(
+    county = case_when(
+      
+      # Brooklyn
+      str_detect(site, regex("Marine Park|North Forty Natural Area|Prospect Park 1|Prospect Park 2", ignore_case = TRUE)) ~ "Brooklyn",
+      
+      # Queens
+      str_detect(site, regex("Alley Pond Park|Cunningham Park 1|Cunningham Park 2|Flushing Meadows|Forest Park 1|Forest Park 2|Highland Park|Horatio Playground|John Golden Park|Kissena Park|North Alley Pond Park", ignore_case = TRUE)) ~ "Queens",
+      
+      # Staten Island
+      str_detect(site, regex("Arden Heights|Blue Heron|Clove Lakes|Conference House|Deere|Fairview|Jones Woods|Latourette|Lemon Creek|Long Pond|Mount Loretto|North Mount Loretto|Todt Hill|Willowbrook|Wolfe's Pond", ignore_case = TRUE)) ~ "Staten Island",
+      
+      # Nassau
+      str_detect(site, regex("Bailey Arboretum|Bethpage State Park|Brookville|Christopher Morley|Clark Botanic|Fox Hollow|Garvies Point|Harrison Williams|Hempstead|Hope Goddard|Humes|Leeds Pond|Manetto Hills|Massapequa|Muttontown|Old Westbury|Roosevelt|Sands Point|Stillwell Woods|Stillwell Preserve|SUNY Old Westbury|Syosset-Woodbury|Tiffany Creek|Trail View|Whitney Pond|William Cullen Bryant", ignore_case = TRUE)) ~ "Nassau",
+      
+      # Suffolk
+      str_detect(site, regex("Bayard Cutting|Blydenburgh|Breezy|Caumsett|Coindre Hall|Cold Spring|Connetquot|Cordwood|Dix Hills|Dr. Jeffrey Wenig|Farmingville|Forsythe|Froehlich|Gardiner|Glacier Ridge|Good Ground|Hedges Creek|Henry Ingraham|Hidden Pond|Holtsville|Hoyt Farm|Indian Island|Lakeland|Laurel Ridge|Makamah|Meadowlark|Millers Pond|Otsego|Phragmites|Pine Meadow|Pine Neck|Prosser Pines|Robert Cushman|Rocky Point|Schuyler|Southaven|Sunken Meadow|Sweer Briar|Vanderbilt|Veteran|West Hills|Wildwood", ignore_case = TRUE)) ~ "Suffolk",
+      
+      TRUE ~ NA_character_  # leave NA if nothing matches
+    )
+  )
+```
+
+
+```{r}
+# Standardizing 2025 data using GPS start and end
+
+library(geosphere)
+
+new_data$fraction_of_100m <- apply(new_data, 1, function(row) {
+  tryCatch({
+    ## ---- Parse GPS START ----
+    gps_start <- row["gps_start"]
+    start_clean <- gsub("\\s", "", gps_start)
+    start_split <- strsplit(start_clean, ",")[[1]]
+    
+    start_lat <- as.numeric(start_split[1])
+    start_lon <- as.numeric(start_split[2])
+    
+    ## ---- Parse GPS END ----
+    gps_end <- row["gps_end"]
+    end_clean <- gsub("\\s", "", gps_end)
+    end_split <- strsplit(end_clean, ",")[[1]]
+    
+    end_lat <- as.numeric(end_split[1])
+    end_lon <- as.numeric(end_split[2])
+    
+    ## ---- Distance in meters ----
+    distance_m <- distGeo(
+      c(start_lon, start_lat),
+      c(end_lon, end_lat)
+    )
+    
+    ## ---- Fraction of 100 m ----
+    round(distance_m / 100, 4)
+    
+  }, error = function(e) {
+    NA
+  })
+})
+
+# Create standardized 100 m transect ID
+new_data$transect_100m_standard <- paste0(
+  new_data$transect_no, "_", round(new_data$fraction_of_100m, 2)
+)
+
+# Check results
+head(
+  new_data[, c(
+    "transect_no",
+    "gps_start",
+    "gps_end",
+    "fraction_of_100m",
+    "transect_100m_standard"
+  )]
+)
+
+# How many succeeded
+sum(!is.na(new_data$fraction_of_100m))
+```
+
+```{r}
+library(lubridate)
+
+# Convert new_data$date to Date
+new_data$date <- mdy(new_data$date)
+```
+
+
+# 2023-2025
+## Merge two datasets
+
+```{r, error=TRUE}
+`2023_2025_nyctick_df` <- rbind(ticknyc_df, new_data)
+```
+
+```{r, error=TRUE}
+# Export your dataset to Excel
+write.xlsx(`2023_2025_nyctick_df`, "2023_2025_nyctick.xlsx")
 ```
 
