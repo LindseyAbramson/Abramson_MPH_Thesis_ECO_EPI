@@ -46,6 +46,7 @@ rename(
 )
 ```
 
+## NOT USING THIS METHOD
 Standardize by transect for 100m. Create a new column, by 100m.
 By park and transect type.
 ```{r}
@@ -294,10 +295,14 @@ new_data$date <- mdy(new_data$date)
 
 ```{r, error=TRUE}
 `2023_2025_nyctick_df` <- rbind(ticknyc_df, new_data)
+
+`2023_2025_nyctick_df` |>
+  select(-fraction_of_100m, -transect_100m_standard)
 ```
 
 ```{r, error=TRUE}
 # Export your dataset to Excel
 write.xlsx(`2023_2025_nyctick_df`, "2023_2025_nyctick.xlsx")
+write.xlsx(new_data, "2025_nyctick.xlsx")
 ```
 

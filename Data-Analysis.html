@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2025-12-17" />
+<meta name="date" content="2025-12-19" />
 
-<title>Creating 2025 data</title>
+<title>MPH Data Analysis</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -349,465 +349,775 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Creating 2025 data</h1>
-<h4 class="date">2025-12-17</h4>
+<h1 class="title toc-ignore">MPH Data Analysis</h1>
+<h4 class="date">2025-12-19</h4>
 
 </div>
 
 
-<div id="section" class="section level1">
-<h1>2023 + 2024</h1>
-<div id="import-and-tidy-data-2023-2024" class="section level2">
-<h2>Import and Tidy Data 2023-2024</h2>
+<div id="import-and-tidy-data" class="section level2">
+<h2>Import and Tidy Data</h2>
 <p>Import dataset</p>
-<pre class="r"><code>ticknyc_df=
-read_csv(&quot;data/Tick_nyc_clean_23_24.csv&quot;) |&gt;
-  janitor::clean_names() |&gt;
-    mutate(date = mdy(date)) |&gt;
-  select(-site_function, -longitude_start, -latitude_start) |&gt;
-rename(
-  notes = overall_notes
-)</code></pre>
-<pre><code>## Rows: 2070 Columns: 48
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (15): Transect No., County, Site, Site function, Transect type, Date, Ha...
-## dbl (33): Drag round, Year, Longitude Start, Latitude Start, Amblyomma ameri...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code>data &lt;- read_excel(&quot;data/2023_2025_nyctick.xlsx&quot;)</code></pre>
+<p>Correct for date (phenology). Describe the phenology. *Discuss at the
+group meeting.Can put the date as a random effect</p>
+<p>Correct for weather?</p>
 </div>
-<div id="not-using-this-method" class="section level2">
-<h2>NOT USING THIS METHOD</h2>
-<p>Standardize by transect for 100m. Create a new column, by 100m. By
-park and transect type.</p>
-<pre class="r"><code># Standardizing ticknyc data using GPS start and end
-
-ticknyc_df$fraction_of_100m &lt;- apply(ticknyc_df, 1, function(row) {
-  tryCatch({
-    ## ---- Parse GPS START ----
-    gps_start &lt;- row[&quot;gps_start&quot;]
-    start_clean &lt;- gsub(&quot;\\s&quot;, &quot;&quot;, gps_start)
-    start_split &lt;- strsplit(start_clean, &quot;,&quot;)[[1]]
-    
-    start_lat &lt;- as.numeric(start_split[1])
-    start_lon &lt;- as.numeric(start_split[2])
-    
-    ## ---- Parse GPS END ----
-    gps_end &lt;- row[&quot;gps_end&quot;]
-    end_clean &lt;- gsub(&quot;\\s&quot;, &quot;&quot;, gps_end)
-    end_split &lt;- strsplit(end_clean, &quot;,&quot;)[[1]]
-    
-    end_lat &lt;- as.numeric(end_split[1])
-    end_lon &lt;- as.numeric(end_split[2])
-    
-    ## ---- Distance in meters ----
-    distance_m &lt;- distGeo(
-      c(start_lon, start_lat),
-      c(end_lon, end_lat)
-    )
-    
-    ## ---- Fraction of 100 m ----
-    round(distance_m / 100, 4)
-    
-  }, error = function(e) {
-    NA
-  })
-})</code></pre>
-<pre><code>## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion</code></pre>
-<pre class="r"><code># Create standardized 100 m transect ID
-ticknyc_df$transect_100m_standard &lt;- paste0(
-  ticknyc_df$transect_no, &quot;_&quot;, round(ticknyc_df$fraction_of_100m, 2)
-)
-
-# Check results
-head(
-  ticknyc_df[, c(
-    &quot;transect_no&quot;,
-    &quot;gps_start&quot;,
-    &quot;gps_end&quot;,
-    &quot;fraction_of_100m&quot;,
-    &quot;transect_100m_standard&quot;
-  )]
-)</code></pre>
-<pre><code>## # A tibble: 6 × 5
-##   transect_no gps_start          gps_end fraction_of_100m transect_100m_standard
-##   &lt;chr&gt;       &lt;chr&gt;              &lt;chr&gt;              &lt;dbl&gt; &lt;chr&gt;                 
-## 1 20009       40.74315, -73.739… 40.742…            1.00  20009_1               
-## 2 20010       40.74389, -73.741… 40.743…            1.17  20010_1.17            
-## 3 23-3045     40.7435217, -73.7… 40.743…            0.810 23-3045_0.81          
-## 4 23-3046A    40.7436929, -73.7… 40.743…            0.507 23-3046A_0.51         
-## 5 23-6045     40.7438413, -73.7… 40.744…            0.734 23-6045_0.73          
-## 6 23-6046     40.7443938, -73.7… 40.743…            1.05  23-6046_1.05</code></pre>
-<pre class="r"><code># How many succeeded
-sum(!is.na(ticknyc_df$fraction_of_100m))</code></pre>
-<pre><code>## [1] 1900</code></pre>
-</div>
-</div>
-<div id="section-1" class="section level1">
-<h1>2025</h1>
-<div id="combining-two-2025-datasets" class="section level2">
-<h2>Combining two 2025 datasets</h2>
-<pre class="r"><code>#read in data
-field_data &lt;- read_csv(&quot;data/FIELD DATA.csv&quot;) |&gt;
-  janitor::clean_names() </code></pre>
-<pre><code>## Rows: 7530 Columns: 14
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (13): Site, Transect type, Date, Transect No., Habitat type, Temperature...
-## dbl  (1): Section
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>tick_id &lt;- read_csv(&quot;data/TICK ID.csv&quot;) |&gt;
-    janitor::clean_names()</code></pre>
-<pre><code>## Rows: 4078 Columns: 4
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (4): Transect No, Species, Stage, Sex (if adult)
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>field_data &lt;- field_data %&gt;%
-  group_by(site) %&gt;%
-  mutate(
-    drag_round = if_else(date == min(date, na.rm = TRUE), 1, 2)
-  ) %&gt;%
-  ungroup()</code></pre>
-<pre><code>## Warning: There was 1 warning in `mutate()`.
-## ℹ In argument: `drag_round = if_else(date == min(date, na.rm = TRUE), 1, 2)`.
-## ℹ In group 73: `site = NA`.
-## Caused by warning in `min()`:
-## ! no non-missing arguments, returning NA</code></pre>
-<pre class="r"><code># 2. Count ticks by transect (super simple)
-tick_counts &lt;- tick_id %&gt;%
-  count(`transect_no`, species, stage, sex_if_adult) %&gt;%
-  pivot_wider(
-    names_from = c(species, stage),
-    values_from = n,
-    values_fill = 0
-  )
-
-# 3. Get ALL field data - one row per transect with everything
-field_summary &lt;- field_data %&gt;%
-  group_by(transect_no) %&gt;%
+<div id="main-descriptive-summaries" class="section level2">
+<h2>Main Descriptive Summaries</h2>
+<pre class="r"><code>data |&gt;
+  group_by(transect_type) |&gt;
   summarise(
-    drag_round = first(drag_round),
-    Site = first(site),
-    Transect.type = first(transect_type),
-    Date = first(date),
-    Temperature = first(temperature),
-    Humidity = first(relative_humidity),
-    GPS.Start = first(gps_start),
-    GPS.End = first(gps_end),
-    Start.Time = first(start_time),
-    End.Time = first(end_time),
-   Collector = first(collector),
-     Notes = paste(unique(na.omit(notes)), collapse = &quot;; &quot;),
-    Habitat.list = paste(habitat_type[order(section)], collapse = &quot;, &quot;),
-    .groups = &quot;drop&quot;
-  )
-
-# 4. Combine them
-new_data &lt;- field_summary %&gt;%
-  left_join(tick_counts, by = c(&quot;transect_no&quot;)) |&gt;
-  mutate(
-    year = str_sub(Date, -4),
-    county = NA,
-    site_function = NA,
-    fraction_of_100m = NA,
-    transect_100m_standard = NA,
-    amblyomma_maculatum_larva = 0,
-    dermacentor_albipictus_nymph = 0,
-    dermacentor_albipictus_larva = 0,
-    dermacentor_variabilis_nymph=0,
-    dermacentor_variabilis_larva=0,
-    haemaphysalis_leporispalustris_adult=0,
-    haemaphysalis_leporispalustris_nymph=0,
-    haemaphysalis_leporispalustris_larva=0,
-    rhipicephalus_sanguineus_adult=0, 
-    rhipicephalus_sanguineus_nymph=0, 
-    rhipicephalus_sanguineus_larva=0,
-    unknown_adult=0, 
-    unknown_nymph=0,
-    unknown_unknown=0
+    amblyomma_nymph_count = sum(amblyomma_americanum_nymph),
+    ixodes_nymph_count = sum(ixodes_scapularis_nymph)
   ) |&gt;
-janitor::clean_names()
-
-
-new_data &lt;- new_data |&gt;
-  rename(
-habitat_type_concat = habitat_list,
-temp_f = temperature,
-rh_percent = humidity,
-collectors = collector
-  )
-
-new_data$total &lt;- rowSums(new_data[, 16:41], na.rm = TRUE)</code></pre>
-<pre><code>## Error in rowSums(new_data[, 16:41], na.rm = TRUE): &#39;x&#39; must be numeric</code></pre>
-<pre class="r"><code>new_data &lt;-new_data |&gt;
-  select(
-    transect_no, county, site,  # First variables
-    transect_type, drag_round, year, date,     # Then these
-    habitat_type_concat, temp_f, rh_percent, gps_start, gps_end, start_time, end_time, collectors, amblyomma_americanum_adult, amblyomma_americanum_nymph, amblyomma_americanum_larva, amblyomma_maculatum_adult, amblyomma_maculatum_nymph, amblyomma_maculatum_larva, dermacentor_albipictus_adult, dermacentor_albipictus_nymph, dermacentor_albipictus_larva, dermacentor_variabilis_adult,  dermacentor_variabilis_nymph, dermacentor_variabilis_larva, haemaphysalis_leporispalustris_adult, haemaphysalis_leporispalustris_nymph, haemaphysalis_leporispalustris_larva, haemaphysalis_longicornis_adult, haemaphysalis_longicornis_nymph, haemaphysalis_longicornis_larva, ixodes_scapularis_adult, ixodes_scapularis_nymph, ixodes_scapularis_larva, rhipicephalus_sanguineus_adult, rhipicephalus_sanguineus_nymph, rhipicephalus_sanguineus_larva, unknown_adult, unknown_nymph, unknown_larva, unknown_unknown, total, fraction_of_100m, notes
-  )</code></pre>
-<pre><code>## Error in `select()`:
-## ! Can&#39;t select columns that don&#39;t exist.
-## ✖ Column `total` doesn&#39;t exist.</code></pre>
+   knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">transect_type</th>
+<th align="right">amblyomma_nymph_count</th>
+<th align="right">ixodes_nymph_count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Edge</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">Interior</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">Trail</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>data |&gt;
+  group_by(transect_type) |&gt;
+  summarise(
+    mean_amblyomma_nymph = mean(amblyomma_americanum_nymph, na.rm = TRUE),
+    mean_ixodes_nymph = mean(ixodes_scapularis_nymph, na.rm = TRUE),
+    n_transects = n()
+  )  |&gt;
+   knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">transect_type</th>
+<th align="right">mean_amblyomma_nymph</th>
+<th align="right">mean_ixodes_nymph</th>
+<th align="right">n_transects</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Edge</td>
+<td align="right">2.8487230</td>
+<td align="right">1.813360</td>
+<td align="right">581</td>
+</tr>
+<tr class="even">
+<td align="left">Interior</td>
+<td align="right">4.3924180</td>
+<td align="right">4.655738</td>
+<td align="right">1111</td>
+</tr>
+<tr class="odd">
+<td align="left">Trail</td>
+<td align="right">4.8636806</td>
+<td align="right">4.562804</td>
+<td align="right">1171</td>
+</tr>
+<tr class="even">
+<td align="left">NA</td>
+<td align="right">0.5789474</td>
+<td align="right">1.736842</td>
+<td align="right">23</td>
+</tr>
+</tbody>
+</table>
 </div>
-</div>
-<div id="adding-in-county" class="section level1">
-<h1>Adding in county</h1>
-<pre class="r"><code>library(dplyr)
-library(stringr)
-
-new_data &lt;- new_data %&gt;%
-  mutate(
-    county = case_when(
-      
-      # Brooklyn
-      str_detect(site, regex(&quot;Marine Park|North Forty Natural Area|Prospect Park 1|Prospect Park 2&quot;, ignore_case = TRUE)) ~ &quot;Brooklyn&quot;,
-      
-      # Queens
-      str_detect(site, regex(&quot;Alley Pond Park|Cunningham Park 1|Cunningham Park 2|Flushing Meadows|Forest Park 1|Forest Park 2|Highland Park|Horatio Playground|John Golden Park|Kissena Park|North Alley Pond Park&quot;, ignore_case = TRUE)) ~ &quot;Queens&quot;,
-      
-      # Staten Island
-      str_detect(site, regex(&quot;Arden Heights|Blue Heron|Clove Lakes|Conference House|Deere|Fairview|Jones Woods|Latourette|Lemon Creek|Long Pond|Mount Loretto|North Mount Loretto|Todt Hill|Willowbrook|Wolfe&#39;s Pond&quot;, ignore_case = TRUE)) ~ &quot;Staten Island&quot;,
-      
-      # Nassau
-      str_detect(site, regex(&quot;Bailey Arboretum|Bethpage State Park|Brookville|Christopher Morley|Clark Botanic|Fox Hollow|Garvies Point|Harrison Williams|Hempstead|Hope Goddard|Humes|Leeds Pond|Manetto Hills|Massapequa|Muttontown|Old Westbury|Roosevelt|Sands Point|Stillwell Woods|Stillwell Preserve|SUNY Old Westbury|Syosset-Woodbury|Tiffany Creek|Trail View|Whitney Pond|William Cullen Bryant&quot;, ignore_case = TRUE)) ~ &quot;Nassau&quot;,
-      
-      # Suffolk
-      str_detect(site, regex(&quot;Bayard Cutting|Blydenburgh|Breezy|Caumsett|Coindre Hall|Cold Spring|Connetquot|Cordwood|Dix Hills|Dr. Jeffrey Wenig|Farmingville|Forsythe|Froehlich|Gardiner|Glacier Ridge|Good Ground|Hedges Creek|Henry Ingraham|Hidden Pond|Holtsville|Hoyt Farm|Indian Island|Lakeland|Laurel Ridge|Makamah|Meadowlark|Millers Pond|Otsego|Phragmites|Pine Meadow|Pine Neck|Prosser Pines|Robert Cushman|Rocky Point|Schuyler|Southaven|Sunken Meadow|Sweer Briar|Vanderbilt|Veteran|West Hills|Wildwood&quot;, ignore_case = TRUE)) ~ &quot;Suffolk&quot;,
-      
-      TRUE ~ NA_character_  # leave NA if nothing matches
-    )
-  )</code></pre>
-<pre class="r"><code># Standardizing 2025 data using GPS start and end
-
-library(geosphere)
-
-new_data$fraction_of_100m &lt;- apply(new_data, 1, function(row) {
-  tryCatch({
-    ## ---- Parse GPS START ----
-    gps_start &lt;- row[&quot;gps_start&quot;]
-    start_clean &lt;- gsub(&quot;\\s&quot;, &quot;&quot;, gps_start)
-    start_split &lt;- strsplit(start_clean, &quot;,&quot;)[[1]]
-    
-    start_lat &lt;- as.numeric(start_split[1])
-    start_lon &lt;- as.numeric(start_split[2])
-    
-    ## ---- Parse GPS END ----
-    gps_end &lt;- row[&quot;gps_end&quot;]
-    end_clean &lt;- gsub(&quot;\\s&quot;, &quot;&quot;, gps_end)
-    end_split &lt;- strsplit(end_clean, &quot;,&quot;)[[1]]
-    
-    end_lat &lt;- as.numeric(end_split[1])
-    end_lon &lt;- as.numeric(end_split[2])
-    
-    ## ---- Distance in meters ----
-    distance_m &lt;- distGeo(
-      c(start_lon, start_lat),
-      c(end_lon, end_lat)
-    )
-    
-    ## ---- Fraction of 100 m ----
-    round(distance_m / 100, 4)
-    
-  }, error = function(e) {
-    NA
-  })
-})</code></pre>
-<pre><code>## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion
-## Warning in doTryCatch(return(expr), name, parentenv, handler): NAs introduced
-## by coercion</code></pre>
-<pre class="r"><code># Create standardized 100 m transect ID
-new_data$transect_100m_standard &lt;- paste0(
-  new_data$transect_no, &quot;_&quot;, round(new_data$fraction_of_100m, 2)
-)
-
-# Check results
-head(
-  new_data[, c(
-    &quot;transect_no&quot;,
-    &quot;gps_start&quot;,
-    &quot;gps_end&quot;,
-    &quot;fraction_of_100m&quot;,
-    &quot;transect_100m_standard&quot;
-  )]
-)</code></pre>
-<pre><code>## # A tibble: 6 × 5
-##   transect_no gps_start          gps_end fraction_of_100m transect_100m_standard
-##   &lt;chr&gt;       &lt;chr&gt;              &lt;chr&gt;              &lt;dbl&gt; &lt;chr&gt;                 
-## 1 24-0410     40.5320972, -74.2… 40.532…            0.956 24-0410_0.96          
-## 2 24-0463     40.8536375, -73.3… 40.863…           10.4   24-0463_10.41         
-## 3 24-0464     40.8514495, -73.3… 40.852…            1.28  24-0464_1.28          
-## 4 24-2447     40.7866926,-73.70… 40.786…            0.226 24-2447_0.23          
-## 5 25-0001     40.5026841, -74.2… 40.502…            0.856 25-0001_0.86          
-## 6 25-0001     40.5026841, -74.2… 40.502…            0.856 25-0001_0.86</code></pre>
-<pre class="r"><code># How many succeeded
-sum(!is.na(new_data$fraction_of_100m))</code></pre>
-<pre><code>## [1] 769</code></pre>
-<pre class="r"><code>library(lubridate)
-
-# Convert new_data$date to Date
-new_data$date &lt;- mdy(new_data$date)</code></pre>
-</div>
-<div id="section-2" class="section level1">
-<h1>2023-2025</h1>
-<div id="merge-two-datasets" class="section level2">
-<h2>Merge two datasets</h2>
-<pre class="r"><code>`2023_2025_nyctick_df` &lt;- rbind(ticknyc_df, new_data)</code></pre>
-<pre><code>## Error in rbind(deparse.level, ...): numbers of columns of arguments do not match</code></pre>
-<pre class="r"><code>`2023_2025_nyctick_df` |&gt;
-  select(-fraction_of_100m, -transect_100m_standard)</code></pre>
-<pre><code>## Error: object &#39;2023_2025_nyctick_df&#39; not found</code></pre>
-<pre class="r"><code># Export your dataset to Excel
-write.xlsx(`2023_2025_nyctick_df`, &quot;2023_2025_nyctick.xlsx&quot;)</code></pre>
-<pre><code>## Error in write.xlsx(`2023_2025_nyctick_df`, &quot;2023_2025_nyctick.xlsx&quot;): could not find function &quot;write.xlsx&quot;</code></pre>
-<pre class="r"><code>write.xlsx(new_data, &quot;2025_nyctick.xlsx&quot;)</code></pre>
-<pre><code>## Error in write.xlsx(new_data, &quot;2025_nyctick.xlsx&quot;): could not find function &quot;write.xlsx&quot;</code></pre>
-</div>
+<div id="extra-descriptive-summaries" class="section level2">
+<h2>Extra Descriptive Summaries</h2>
+<p>Overview</p>
+<pre class="r"><code>data |&gt;
+  summarise(
+      Total_Transects = n(),
+    Total_Ticks = sum(total, na.rm = TRUE),
+    Mean_Ticks_Per_Transect = round(mean(total, na.rm = TRUE), 2),
+    Max_Ticks_Single_Transect = max(total, na.rm = TRUE)
+  ) |&gt;
+   knitr::kable()</code></pre>
+<table>
+<colgroup>
+<col width="20%" />
+<col width="15%" />
+<col width="30%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">Total_Transects</th>
+<th align="right">Total_Ticks</th>
+<th align="right">Mean_Ticks_Per_Transect</th>
+<th align="right">Max_Ticks_Single_Transect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2886</td>
+<td align="right">27386</td>
+<td align="right">9.55</td>
+<td align="right">386</td>
+</tr>
+</tbody>
+</table>
+<p>County summary</p>
+<pre class="r"><code>data |&gt;
+  group_by(county) |&gt;
+  summarise(
+    Transects = n(),
+    Total_Ticks = sum(total, na.rm = TRUE),
+    Mean_ticks_per_transect = mean(total, na.rm = TRUE),
+    Median_ticks_per_transect = median(total, na.rm = TRUE),
+    Percent_transects_with_ticks = round(mean(total &gt; 0, na.rm = TRUE) * 100, 1),
+  ) |&gt;
+  arrange(desc(Total_Ticks)) |&gt;
+   knitr::kable()</code></pre>
+<table>
+<colgroup>
+<col width="12%" />
+<col width="8%" />
+<col width="10%" />
+<col width="20%" />
+<col width="22%" />
+<col width="25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">county</th>
+<th align="right">Transects</th>
+<th align="right">Total_Ticks</th>
+<th align="right">Mean_ticks_per_transect</th>
+<th align="right">Median_ticks_per_transect</th>
+<th align="right">Percent_transects_with_ticks</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Suffolk</td>
+<td align="right">789</td>
+<td align="right">18185</td>
+<td align="right">23.0481622</td>
+<td align="right">9</td>
+<td align="right">82.0</td>
+</tr>
+<tr class="even">
+<td align="left">Nassau</td>
+<td align="right">920</td>
+<td align="right">4737</td>
+<td align="right">5.1657579</td>
+<td align="right">1</td>
+<td align="right">58.5</td>
+</tr>
+<tr class="odd">
+<td align="left">Staten Island</td>
+<td align="right">625</td>
+<td align="right">4051</td>
+<td align="right">6.5550162</td>
+<td align="right">2</td>
+<td align="right">72.5</td>
+</tr>
+<tr class="even">
+<td align="left">Queens</td>
+<td align="right">449</td>
+<td align="right">255</td>
+<td align="right">0.5769231</td>
+<td align="right">0</td>
+<td align="right">22.9</td>
+</tr>
+<tr class="odd">
+<td align="left">NA</td>
+<td align="right">3</td>
+<td align="right">113</td>
+<td align="right">37.6666667</td>
+<td align="right">34</td>
+<td align="right">100.0</td>
+</tr>
+<tr class="even">
+<td align="left">Brooklyn</td>
+<td align="right">100</td>
+<td align="right">45</td>
+<td align="right">0.4500000</td>
+<td align="right">0</td>
+<td align="right">19.0</td>
+</tr>
+</tbody>
+</table>
+<p>Transect type summary</p>
+<pre class="r"><code>data |&gt;
+  group_by(transect_type) |&gt;
+  summarise(
+   Transects = n(),
+    Total_Ticks = sum(total, na.rm = TRUE),
+    Mean_ticks_per_transect = mean(total, na.rm = TRUE),
+    Median_ticks_per_transect = median(total, na.rm = TRUE),
+    Percent_transects_with_ticks = round(mean(total &gt; 0, na.rm = TRUE) * 100, 1)) |&gt; 
+  arrange(desc(Total_Ticks)) |&gt;
+   knitr::kable()</code></pre>
+<table>
+<colgroup>
+<col width="12%" />
+<col width="8%" />
+<col width="10%" />
+<col width="20%" />
+<col width="22%" />
+<col width="25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">transect_type</th>
+<th align="right">Transects</th>
+<th align="right">Total_Ticks</th>
+<th align="right">Mean_ticks_per_transect</th>
+<th align="right">Median_ticks_per_transect</th>
+<th align="right">Percent_transects_with_ticks</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Trail</td>
+<td align="right">1171</td>
+<td align="right">12024</td>
+<td align="right">10.312178</td>
+<td align="right">1.0</td>
+<td align="right">63.0</td>
+</tr>
+<tr class="even">
+<td align="left">Interior</td>
+<td align="right">1111</td>
+<td align="right">11795</td>
+<td align="right">10.703267</td>
+<td align="right">1.5</td>
+<td align="right">62.5</td>
+</tr>
+<tr class="odd">
+<td align="left">Edge</td>
+<td align="right">581</td>
+<td align="right">3387</td>
+<td align="right">5.859862</td>
+<td align="right">1.0</td>
+<td align="right">55.2</td>
+</tr>
+<tr class="even">
+<td align="left">NA</td>
+<td align="right">23</td>
+<td align="right">180</td>
+<td align="right">7.826087</td>
+<td align="right">0.0</td>
+<td align="right">47.8</td>
+</tr>
+</tbody>
+</table>
+<p>Species counts</p>
+<pre class="r"><code>data |&gt;
+  summarise(
+    ixodes_total = sum(across(starts_with(&quot;ixodes&quot;)), na.rm = TRUE),
+    amblyomma_total = sum(across(starts_with(&quot;amblyomma&quot;)), na.rm = TRUE),
+    dermacentor_total = sum(across(starts_with(&quot;dermacentor&quot;)), na.rm = TRUE),
+    haemaphysalis_total = sum(across(starts_with(&quot;haemaphysalis&quot;)), na.rm = TRUE),
+    rhipicephalus_total = sum(across(starts_with(&quot;rhipicephalus&quot;)), na.rm = TRUE),
+    unknown_total = sum(across(starts_with(&quot;unknown&quot;)), na.rm = TRUE)
+) |&gt;
+   knitr::kable()</code></pre>
+<table>
+<colgroup>
+<col width="12%" />
+<col width="15%" />
+<col width="17%" />
+<col width="19%" />
+<col width="19%" />
+<col width="13%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">ixodes_total</th>
+<th align="right">amblyomma_total</th>
+<th align="right">dermacentor_total</th>
+<th align="right">haemaphysalis_total</th>
+<th align="right">rhipicephalus_total</th>
+<th align="right">unknown_total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">11200</td>
+<td align="right">13245</td>
+<td align="right">363</td>
+<td align="right">2606</td>
+<td align="right">2</td>
+<td align="right">158</td>
+</tr>
+</tbody>
+</table>
+<p>Species + life stage count</p>
+<pre class="r"><code>data |&gt;
+  summarise(across(amblyomma_americanum_adult:unknown_unknown, ~sum(., na.rm = TRUE))) |&gt;
+  pivot_longer(everything(), names_to = &quot;Species_LifeStage&quot;, values_to = &quot;Count&quot;) |&gt;
+  arrange(desc(Count)) |&gt;
+  print() |&gt;
+   knitr::kable()</code></pre>
+<pre><code>## # A tibble: 28 × 2
+##    Species_LifeStage               Count
+##    &lt;chr&gt;                           &lt;dbl&gt;
+##  1 amblyomma_americanum_nymph      10743
+##  2 ixodes_scapularis_nymph         10186
+##  3 amblyomma_americanum_adult       2041
+##  4 haemaphysalis_longicornis_nymph  1913
+##  5 ixodes_scapularis_larva           881
+##  6 haemaphysalis_longicornis_larva   474
+##  7 amblyomma_americanum_larva        448
+##  8 dermacentor_variabilis_adult      348
+##  9 haemaphysalis_longicornis_adult   198
+## 10 unknown_larva                     151
+## # ℹ 18 more rows</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Species_LifeStage</th>
+<th align="right">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">amblyomma_americanum_nymph</td>
+<td align="right">10743</td>
+</tr>
+<tr class="even">
+<td align="left">ixodes_scapularis_nymph</td>
+<td align="right">10186</td>
+</tr>
+<tr class="odd">
+<td align="left">amblyomma_americanum_adult</td>
+<td align="right">2041</td>
+</tr>
+<tr class="even">
+<td align="left">haemaphysalis_longicornis_nymph</td>
+<td align="right">1913</td>
+</tr>
+<tr class="odd">
+<td align="left">ixodes_scapularis_larva</td>
+<td align="right">881</td>
+</tr>
+<tr class="even">
+<td align="left">haemaphysalis_longicornis_larva</td>
+<td align="right">474</td>
+</tr>
+<tr class="odd">
+<td align="left">amblyomma_americanum_larva</td>
+<td align="right">448</td>
+</tr>
+<tr class="even">
+<td align="left">dermacentor_variabilis_adult</td>
+<td align="right">348</td>
+</tr>
+<tr class="odd">
+<td align="left">haemaphysalis_longicornis_adult</td>
+<td align="right">198</td>
+</tr>
+<tr class="even">
+<td align="left">unknown_larva</td>
+<td align="right">151</td>
+</tr>
+<tr class="odd">
+<td align="left">ixodes_scapularis_adult</td>
+<td align="right">133</td>
+</tr>
+<tr class="even">
+<td align="left">haemaphysalis_leporispalustris_nymph</td>
+<td align="right">19</td>
+</tr>
+<tr class="odd">
+<td align="left">amblyomma_maculatum_nymph</td>
+<td align="right">8</td>
+</tr>
+<tr class="even">
+<td align="left">dermacentor_albipictus_adult</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="left">dermacentor_variabilis_nymph</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="left">amblyomma_maculatum_adult</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="left">unknown_nymph</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">dermacentor_variabilis_larva</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">haemaphysalis_leporispalustris_adult</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">rhipicephalus_sanguineus_nymph</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">unknown_adult</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">unknown_unknown</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">amblyomma_maculatum_larva</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">dermacentor_albipictus_nymph</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">dermacentor_albipictus_larva</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">haemaphysalis_leporispalustris_larva</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">rhipicephalus_sanguineus_adult</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">rhipicephalus_sanguineus_larva</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Species by transect type</p>
+<pre class="r"><code>data |&gt;
+  group_by(transect_type) |&gt;
+  summarise(
+      ixodes_total = sum(across(starts_with(&quot;ixodes&quot;)), na.rm = TRUE),
+    amblyomma_total = sum(across(starts_with(&quot;amblyomma&quot;)), na.rm = TRUE),
+    dermacentor_total = sum(across(starts_with(&quot;dermacentor&quot;)), na.rm = TRUE),
+    haemaphysalis_total = sum(across(starts_with(&quot;haemaphysalis&quot;)), na.rm = TRUE),
+    rhipicephalus_total = sum(across(starts_with(&quot;rhipicephalus&quot;)), na.rm = TRUE),
+    unknown_total = sum(across(starts_with(&quot;unknown&quot;)), na.rm = TRUE)
+  ) |&gt;
+  pivot_longer(-transect_type, names_to = &quot;species&quot;, values_to = &quot;count&quot;) %&gt;%
+  pivot_wider(names_from = transect_type, values_from = count, values_fill = 0) |&gt;
+   knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">species</th>
+<th align="right">Edge</th>
+<th align="right">Interior</th>
+<th align="right">Trail</th>
+<th align="right">NA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ixodes_total</td>
+<td align="right">946</td>
+<td align="right">5304</td>
+<td align="right">4850</td>
+<td align="right">100</td>
+</tr>
+<tr class="even">
+<td align="left">amblyomma_total</td>
+<td align="right">1783</td>
+<td align="right">5242</td>
+<td align="right">6208</td>
+<td align="right">12</td>
+</tr>
+<tr class="odd">
+<td align="left">dermacentor_total</td>
+<td align="right">124</td>
+<td align="right">59</td>
+<td align="right">174</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="left">haemaphysalis_total</td>
+<td align="right">530</td>
+<td align="right">1199</td>
+<td align="right">815</td>
+<td align="right">62</td>
+</tr>
+<tr class="odd">
+<td align="left">rhipicephalus_total</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">unknown_total</td>
+<td align="right">3</td>
+<td align="right">75</td>
+<td align="right">80</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Species count in each county</p>
+<pre class="r"><code>data |&gt;
+  group_by(county) |&gt;
+  summarise(
+    ixodes_total = sum(across(starts_with(&quot;ixodes&quot;)), na.rm = TRUE),
+    amblyomma_total = sum(across(starts_with(&quot;amblyomma&quot;)), na.rm = TRUE),
+    dermacentor_total = sum(across(starts_with(&quot;dermacentor&quot;)), na.rm = TRUE),
+    haemaphysalis_total = sum(across(starts_with(&quot;haemaphysalis&quot;)), na.rm = TRUE),
+    rhipicephalus_total = sum(across(starts_with(&quot;rhipicephalus&quot;)), na.rm = TRUE),
+    unknown_total = sum(across(starts_with(&quot;unknown&quot;)), na.rm = TRUE)
+  ) |&gt;
+  pivot_longer(-county, names_to = &quot;species&quot;, values_to = &quot;count&quot;) |&gt;
+  pivot_wider(names_from = county, values_from = count, values_fill = 0) |&gt;
+    knitr::kable()</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="29%" />
+<col width="13%" />
+<col width="10%" />
+<col width="10%" />
+<col width="20%" />
+<col width="11%" />
+<col width="4%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">species</th>
+<th align="right">Brooklyn</th>
+<th align="right">Nassau</th>
+<th align="right">Queens</th>
+<th align="right">Staten Island</th>
+<th align="right">Suffolk</th>
+<th align="right">NA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ixodes_total</td>
+<td align="right">10</td>
+<td align="right">4397</td>
+<td align="right">63</td>
+<td align="right">856</td>
+<td align="right">5801</td>
+<td align="right">73</td>
+</tr>
+<tr class="even">
+<td align="left">amblyomma_total</td>
+<td align="right">8</td>
+<td align="right">101</td>
+<td align="right">61</td>
+<td align="right">1178</td>
+<td align="right">11862</td>
+<td align="right">35</td>
+</tr>
+<tr class="odd">
+<td align="left">dermacentor_total</td>
+<td align="right">26</td>
+<td align="right">163</td>
+<td align="right">61</td>
+<td align="right">4</td>
+<td align="right">109</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">haemaphysalis_total</td>
+<td align="right">1</td>
+<td align="right">82</td>
+<td align="right">70</td>
+<td align="right">2041</td>
+<td align="right">407</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="left">rhipicephalus_total</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">unknown_total</td>
+<td align="right">0</td>
+<td align="right">117</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">39</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Life stages count</p>
+<pre class="r"><code>data |&gt;
+  summarise(
+    Adults = sum(across(ends_with(&quot;_adult&quot;)), na.rm = TRUE),
+    Nymphs = sum(across(ends_with(&quot;_nymph&quot;)), na.rm = TRUE),
+    Larvae = sum(across(ends_with(&quot;_larva&quot;)), na.rm = TRUE),
+    Total = Adults + Nymphs + Larvae
+  ) |&gt;
+    knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Adults</th>
+<th align="right">Nymphs</th>
+<th align="right">Larvae</th>
+<th align="right">Total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2735</td>
+<td align="right">22880</td>
+<td align="right">1957</td>
+<td align="right">27572</td>
+</tr>
+</tbody>
+</table>
+<p>Life staage count by county</p>
+<pre class="r"><code>data |&gt;
+  group_by(county) |&gt;
+  summarise(
+    Adults = sum(across(ends_with(&quot;_adult&quot;)), na.rm = TRUE),
+    Nymphs = sum(across(ends_with(&quot;_nymph&quot;)), na.rm = TRUE),
+    Larvae = sum(across(ends_with(&quot;_larva&quot;)), na.rm = TRUE),
+    Total = Adults + Nymphs + Larvae
+  ) |&gt;
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">county</th>
+<th align="right">Adults</th>
+<th align="right">Nymphs</th>
+<th align="right">Larvae</th>
+<th align="right">Total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Brooklyn</td>
+<td align="right">31</td>
+<td align="right">14</td>
+<td align="right">0</td>
+<td align="right">45</td>
+</tr>
+<tr class="even">
+<td align="left">Nassau</td>
+<td align="right">276</td>
+<td align="right">4014</td>
+<td align="right">570</td>
+<td align="right">4860</td>
+</tr>
+<tr class="odd">
+<td align="left">Queens</td>
+<td align="right">90</td>
+<td align="right">142</td>
+<td align="right">24</td>
+<td align="right">256</td>
+</tr>
+<tr class="even">
+<td align="left">Staten Island</td>
+<td align="right">371</td>
+<td align="right">3184</td>
+<td align="right">524</td>
+<td align="right">4079</td>
+</tr>
+<tr class="odd">
+<td align="left">Suffolk</td>
+<td align="right">1967</td>
+<td align="right">15480</td>
+<td align="right">772</td>
+<td align="right">18219</td>
+</tr>
+<tr class="even">
+<td align="left">NA</td>
+<td align="right">0</td>
+<td align="right">46</td>
+<td align="right">67</td>
+<td align="right">113</td>
+</tr>
+</tbody>
+</table>
+<p>Life stage count by transect type</p>
+<pre class="r"><code>data |&gt;
+  group_by(transect_type) |&gt;
+  summarise(
+    Adults = sum(across(ends_with(&quot;_adult&quot;)), na.rm = TRUE),
+    Nymphs = sum(across(ends_with(&quot;_nymph&quot;)), na.rm = TRUE),
+    Larvae = sum(across(ends_with(&quot;_larva&quot;)), na.rm = TRUE),
+    Total = Adults + Nymphs + Larvae
+  ) |&gt;
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">transect_type</th>
+<th align="right">Adults</th>
+<th align="right">Nymphs</th>
+<th align="right">Larvae</th>
+<th align="right">Total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Edge</td>
+<td align="right">523</td>
+<td align="right">2841</td>
+<td align="right">24</td>
+<td align="right">3388</td>
+</tr>
+<tr class="even">
+<td align="left">Interior</td>
+<td align="right">793</td>
+<td align="right">9649</td>
+<td align="right">1436</td>
+<td align="right">11878</td>
+</tr>
+<tr class="odd">
+<td align="left">Trail</td>
+<td align="right">1410</td>
+<td align="right">10328</td>
+<td align="right">388</td>
+<td align="right">12126</td>
+</tr>
+<tr class="even">
+<td align="left">NA</td>
+<td align="right">9</td>
+<td align="right">62</td>
+<td align="right">109</td>
+<td align="right">180</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 
